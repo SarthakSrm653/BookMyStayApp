@@ -1,15 +1,17 @@
 /**
- * BookingApp - Use Case 4: Room Search & Availability Check
+ * BookingApp - Use Case 5: Booking Request Queue (FIFO)
  *
- * Demonstrates read-only access to the centralized inventory.
- * Only available room types are displayed along with their details.
+ * Demonstrates collecting booking requests using a Queue
+ * to ensure First-Come-First-Served (FIFO) processing.
  *
  * Author: SarthakSrm653
- * Version: 1.3
+ * Version: 1.4
  */
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
+import java.util.LinkedList;
 
 abstract class Room {
     private int numberOfBeds;
@@ -68,11 +70,7 @@ class RoomInventory {
         return inventory.getOrDefault(roomType, 0);
     }
 
-    public void updateAvailability(String roomType, int newCount) {
-        inventory.put(roomType, newCount);
-    }
-
-    // Display inventory read-only
+    // For Use Case 5, we do not update availability yet
     public void displayAvailableRooms(Room[] rooms) {
         System.out.println("===== Available Rooms =====");
         for (Room room : rooms) {
@@ -85,9 +83,28 @@ class RoomInventory {
     }
 }
 
+// Booking request class
+class BookingRequest {
+    private String guestName;
+    private String roomType;
+
+    public BookingRequest(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
+    }
+
+    public String getGuestName() { return guestName; }
+    public String getRoomType() { return roomType; }
+
+    @Override
+    public String toString() {
+        return String.format("Guest: %s | Requested Room: %s", guestName, roomType);
+    }
+}
+
 public class BookingApp {
     public static void main(String[] args) {
-        System.out.println("Welcome to Book My Stay App - Use Case 4\n");
+        System.out.println("Welcome to Book My Stay App - Use Case 5\n");
 
         // Create room objects
         Room single = new SingleRoom();
@@ -98,12 +115,27 @@ public class BookingApp {
         // Centralized inventory
         RoomInventory inventory = new RoomInventory();
         inventory.addRoomType(single.getRoomType(), 5);
-        inventory.addRoomType(doubleRoom.getRoomType(), 0);  // simulate 0 availability
+        inventory.addRoomType(doubleRoom.getRoomType(), 3);
         inventory.addRoomType(suite.getRoomType(), 2);
 
-        // Display available rooms (read-only)
+        // Display available rooms
         inventory.displayAvailableRooms(rooms);
 
-        System.out.println("Application terminated.");
+        // Booking request queue (FIFO)
+        Queue<BookingRequest> bookingQueue = new LinkedList<>();
+
+        // Guests submit booking requests
+        bookingQueue.add(new BookingRequest("Alice", "Single Room"));
+        bookingQueue.add(new BookingRequest("Bob", "Suite Room"));
+        bookingQueue.add(new BookingRequest("Charlie", "Double Room"));
+
+        // Show queued booking requests
+        System.out.println("\n===== Booking Requests Queue =====");
+        for (BookingRequest request : bookingQueue) {
+            System.out.println(request.toString());
+        }
+        System.out.println("=================================");
+
+        System.out.println("\nApplication terminated (requests collected, no allocation yet).");
     }
 }
