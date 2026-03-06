@@ -1,17 +1,14 @@
 /**
- * BookingApp - Use Case 5: Booking Request Queue (FIFO)
+ * BookingApp - Use Case 5: Booking Request Queue with User Input (FIFO)
  *
- * Demonstrates collecting booking requests using a Queue
- * to ensure First-Come-First-Served (FIFO) processing.
+ * Collects booking requests from users via console input,
+ * stores them in a FIFO queue, and displays queued requests.
  *
  * Author: SarthakSrm653
- * Version: 1.4
+ * Version: 1.4.1
  */
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
-import java.util.LinkedList;
+import java.util.*;
 
 abstract class Room {
     private int numberOfBeds;
@@ -54,7 +51,7 @@ class SuiteRoom extends Room {
     public String getRoomType() { return "Suite Room"; }
 }
 
-// Centralized inventory class
+// Centralized inventory
 class RoomInventory {
     private Map<String, Integer> inventory;
 
@@ -70,7 +67,6 @@ class RoomInventory {
         return inventory.getOrDefault(roomType, 0);
     }
 
-    // For Use Case 5, we do not update availability yet
     public void displayAvailableRooms(Room[] rooms) {
         System.out.println("===== Available Rooms =====");
         for (Room room : rooms) {
@@ -104,7 +100,9 @@ class BookingRequest {
 
 public class BookingApp {
     public static void main(String[] args) {
-        System.out.println("Welcome to Book My Stay App - Use Case 5\n");
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Welcome to Book My Stay App - Use Case 5 with User Input\n");
 
         // Create room objects
         Room single = new SingleRoom();
@@ -121,15 +119,26 @@ public class BookingApp {
         // Display available rooms
         inventory.displayAvailableRooms(rooms);
 
-        // Booking request queue (FIFO)
+        // Booking request queue
         Queue<BookingRequest> bookingQueue = new LinkedList<>();
 
-        // Guests submit booking requests
-        bookingQueue.add(new BookingRequest("Alice", "Single Room"));
-        bookingQueue.add(new BookingRequest("Bob", "Suite Room"));
-        bookingQueue.add(new BookingRequest("Charlie", "Double Room"));
+        System.out.println("\nEnter booking requests (type 'done' to finish):");
 
-        // Show queued booking requests
+        while (true) {
+            System.out.print("Guest Name: ");
+            String guestName = scanner.nextLine();
+            if (guestName.equalsIgnoreCase("done")) break;
+
+            System.out.print("Room Type (Single Room / Double Room / Suite Room): ");
+            String roomType = scanner.nextLine();
+            if (roomType.equalsIgnoreCase("done")) break;
+
+            // Add request to queue
+            bookingQueue.add(new BookingRequest(guestName, roomType));
+            System.out.println("Booking request added!\n");
+        }
+
+        // Display queued requests
         System.out.println("\n===== Booking Requests Queue =====");
         for (BookingRequest request : bookingQueue) {
             System.out.println(request.toString());
@@ -137,5 +146,6 @@ public class BookingApp {
         System.out.println("=================================");
 
         System.out.println("\nApplication terminated (requests collected, no allocation yet).");
+        scanner.close();
     }
 }
