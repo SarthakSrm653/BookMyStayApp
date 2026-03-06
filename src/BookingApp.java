@@ -1,11 +1,11 @@
 /**
- * BookingApp - Use Case 3: Centralized Room Inventory
+ * BookingApp - Use Case 4: Room Search & Availability Check
  *
- * This demonstrates centralized inventory management using HashMap
- * to maintain room availability in one place.
+ * Demonstrates read-only access to the centralized inventory.
+ * Only available room types are displayed along with their details.
  *
  * Author: SarthakSrm653
- * Version: 1.2
+ * Version: 1.3
  */
 
 import java.util.HashMap;
@@ -52,7 +52,7 @@ class SuiteRoom extends Room {
     public String getRoomType() { return "Suite Room"; }
 }
 
-// Centralized Inventory class
+// Centralized inventory class
 class RoomInventory {
     private Map<String, Integer> inventory;
 
@@ -60,56 +60,49 @@ class RoomInventory {
         inventory = new HashMap<>();
     }
 
-    // Register room type with initial availability
     public void addRoomType(String roomType, int count) {
         inventory.put(roomType, count);
     }
 
-    // Get availability for a room type
     public int getAvailability(String roomType) {
         return inventory.getOrDefault(roomType, 0);
     }
 
-    // Update availability
     public void updateAvailability(String roomType, int newCount) {
         inventory.put(roomType, newCount);
     }
 
-    // Display current inventory
-    public void displayInventory() {
-        System.out.println("===== Current Room Inventory =====");
-        for (String type : inventory.keySet()) {
-            System.out.println(type + " -> " + inventory.get(type) + " available");
+    // Display inventory read-only
+    public void displayAvailableRooms(Room[] rooms) {
+        System.out.println("===== Available Rooms =====");
+        for (Room room : rooms) {
+            int available = getAvailability(room.getRoomType());
+            if (available > 0) {
+                System.out.println(room.toString() + " | Available: " + available);
+            }
         }
-        System.out.println("=================================");
+        System.out.println("===========================");
     }
 }
 
 public class BookingApp {
     public static void main(String[] args) {
-        System.out.println("Welcome to Book My Stay App - Use Case 3\n");
+        System.out.println("Welcome to Book My Stay App - Use Case 4\n");
 
         // Create room objects
         Room single = new SingleRoom();
         Room doubleRoom = new DoubleRoom();
         Room suite = new SuiteRoom();
+        Room[] rooms = {single, doubleRoom, suite};
 
         // Centralized inventory
         RoomInventory inventory = new RoomInventory();
         inventory.addRoomType(single.getRoomType(), 5);
-        inventory.addRoomType(doubleRoom.getRoomType(), 3);
+        inventory.addRoomType(doubleRoom.getRoomType(), 0);  // simulate 0 availability
         inventory.addRoomType(suite.getRoomType(), 2);
 
-        // Display room details
-        Room[] rooms = {single, doubleRoom, suite};
-        for (Room room : rooms) {
-            System.out.println(room.toString());
-        }
-
-        System.out.println();
-
-        // Display inventory
-        inventory.displayInventory();
+        // Display available rooms (read-only)
+        inventory.displayAvailableRooms(rooms);
 
         System.out.println("Application terminated.");
     }
