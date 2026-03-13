@@ -2,65 +2,63 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Use Case 8: Booking History & Reporting
- * Goal: Maintain a chronological record of all confirmed bookings for administrative review.
+ * Use Case 9: Error Handling & Validation
+ * Goal: Ensure system stability by validating inputs and handling invalid states via Custom Exceptions.
  */
+
+// Custom Exception for Booking-related errors
+class BookingException extends Exception {
+    public BookingException(String message) {
+        super(message);
+    }
+}
+
 public class Book_My_APP_01 {
 
-    // Internal class to represent a Booking record
-    static class Reservation {
-        String id;
-        String guestName;
-        String roomType;
+    private int inventoryCount = 5; // Initial available rooms
+    private List<String> confirmedBookings = new ArrayList<>();
 
-        Reservation(String id, String guestName, String roomType) {
-            this.id = id;
-            this.guestName = guestName;
-            this.roomType = roomType;
+    /**
+     * Core logic with Validation
+     * @param guestName Name of the guest
+     * @param roomsRequested Number of rooms to book
+     * @throws BookingException if validation fails
+     */
+    public void processBooking(String guestName, int roomsRequested) throws BookingException {
+        System.out.println("Processing request for " + guestName + " (" + roomsRequested + " rooms)...");
+
+        // 1. Input Validation
+        if (roomsRequested <= 0) {
+            throw new BookingException("Validation Failed: Requested rooms must be at least 1.");
         }
 
-        @Override
-        public String toString() {
-            return String.format("ID: %s | Guest: %s | Room: %s", id, guestName, roomType);
+        // 2. System State Validation (Inventory Check)
+        if (roomsRequested > inventoryCount) {
+            throw new BookingException("Validation Failed: Not enough rooms available. (Current Inventory: " + inventoryCount + ")");
         }
-    }
 
-    // List to store history (Preserves insertion order)
-    private final List<Reservation> bookingHistory = new ArrayList<>();
-
-    // Method to simulate confirming a booking and adding it to history
-    public void confirmAndRecord(String id, String name, String room) {
-        Reservation newBooking = new Reservation(id, name, room);
-
-        // Logic: Add to historical record
-        bookingHistory.add(newBooking);
-
-        System.out.println("System Message: Booking " + id + " confirmed and added to history.");
-    }
-
-    // Method to generate a summary report
-    public void generateHistoryReport() {
-        System.out.println("\n--- ADMINISTRATIVE BOOKING REPORT ---");
-        if (bookingHistory.isEmpty()) {
-            System.out.println("No records found.");
-        } else {
-            for (Reservation res : bookingHistory) {
-                System.out.println("[RECORD] " + res);
-            }
-        }
-        System.out.println("Total Transactions: " + bookingHistory.size());
-        System.out.println("-------------------------------------\n");
+        // 3. Successful State Update
+        inventoryCount -= roomsRequested;
+        confirmedBookings.add(guestName + " booked " + roomsRequested + " rooms.");
+        System.out.println("Success! Booking confirmed for " + guestName);
     }
 
     public static void main(String[] args) {
         Book_My_APP_01 app = new Book_My_APP_01();
 
-        // Simulating sequence of bookings
-        app.confirmAndRecord("B-001", "Alice Johnson", "Deluxe");
-        app.confirmAndRecord("B-002", "Bob Smith", "Standard");
-        app.confirmAndRecord("B-003", "Charlie Brown", "Suite");
+        // Testing different scenarios
+        String[] guests = {"Alice", "Bob", "Charlie"};
+        int[] requests = {2, 6, -1}; // Valid, Too many, Invalid input
 
-        // Admin requests the report
-        app.generateHistoryReport();
+        for (int i = 0; i < guests.length; i++) {
+            try {
+                app.processBooking(guests[i], requests[i]);
+            } catch (BookingException e) {
+                // Graceful Failure Handling
+                System.err.println("ALERT: " + e.getMessage());
+            } finally {
+                System.out.println("System Status: " + app.inventoryCount + " rooms remaining.\n");
+            }
+        }
     }
 }
