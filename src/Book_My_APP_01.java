@@ -1,64 +1,64 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Stack;
 
 /**
- * Use Case 9: Error Handling & Validation
- * Goal: Ensure system stability by validating inputs and handling invalid states via Custom Exceptions.
+ * Use Case 10: Booking Cancellation & Inventory Rollback
+ * Goal: Enable safe cancellation of bookings and restore inventory using a Stack (LIFO).
  */
-
-// Custom Exception for Booking-related errors
-class BookingException extends Exception {
-    public BookingException(String message) {
-        super(message);
-    }
-}
-
 public class Book_My_APP_01 {
 
-    private int inventoryCount = 5; // Initial available rooms
-    private List<String> confirmedBookings = new ArrayList<>();
+    // Stack to track allocated Room IDs for rollback
+    private final Stack<String> roomAllocationTracker = new Stack<>();
+    private int availableInventory = 10;
 
     /**
-     * Core logic with Validation
-     * @param guestName Name of the guest
-     * @param roomsRequested Number of rooms to book
-     * @throws BookingException if validation fails
+     * Simulates booking a room and pushing the ID onto the stack
      */
-    public void processBooking(String guestName, int roomsRequested) throws BookingException {
-        System.out.println("Processing request for " + guestName + " (" + roomsRequested + " rooms)...");
-
-        // 1. Input Validation
-        if (roomsRequested <= 0) {
-            throw new BookingException("Validation Failed: Requested rooms must be at least 1.");
+    public void bookRoom(String roomId) {
+        if (availableInventory > 0) {
+            roomAllocationTracker.push(roomId);
+            availableInventory--;
+            System.out.println("Booked: " + roomId + " | Inventory: " + availableInventory);
+        } else {
+            System.out.println("Booking failed: No inventory.");
         }
+    }
 
-        // 2. System State Validation (Inventory Check)
-        if (roomsRequested > inventoryCount) {
-            throw new BookingException("Validation Failed: Not enough rooms available. (Current Inventory: " + inventoryCount + ")");
+    /**
+     * Performs a rollback (Cancellation)
+     * Reverses the last operation performed
+     */
+    public void cancelLastBooking() {
+        System.out.println("\nInitiating Cancellation...");
+
+        if (!roomAllocationTracker.isEmpty()) {
+            // LIFO: Pop the most recent room ID
+            String rolledBackRoom = roomAllocationTracker.pop();
+
+            // Increment inventory (State restoration)
+            availableInventory++;
+
+            System.out.println("Rollback Success: Room " + rolledBackRoom + " is now available.");
+            System.out.println("Updated Inventory: " + availableInventory);
+        } else {
+            System.out.println("Cancellation Failed: No active bookings to roll back.");
         }
-
-        // 3. Successful State Update
-        inventoryCount -= roomsRequested;
-        confirmedBookings.add(guestName + " booked " + roomsRequested + " rooms.");
-        System.out.println("Success! Booking confirmed for " + guestName);
     }
 
     public static void main(String[] args) {
         Book_My_APP_01 app = new Book_My_APP_01();
 
-        // Testing different scenarios
-        String[] guests = {"Alice", "Bob", "Charlie"};
-        int[] requests = {2, 6, -1}; // Valid, Too many, Invalid input
+        // 1. Perform some bookings
+        app.bookRoom("Room_101");
+        app.bookRoom("Room_102");
+        app.bookRoom("Room_103");
 
-        for (int i = 0; i < guests.length; i++) {
-            try {
-                app.processBooking(guests[i], requests[i]);
-            } catch (BookingException e) {
-                // Graceful Failure Handling
-                System.err.println("ALERT: " + e.getMessage());
-            } finally {
-                System.out.println("System Status: " + app.inventoryCount + " rooms remaining.\n");
-            }
-        }
+        // 2. Guest decides to cancel the most recent booking
+        app.cancelLastBooking();
+
+        // 3. Guest cancels another one
+        app.cancelLastBooking();
+
+        // 4. Final state check
+        System.out.println("\nFinal Inventory: " + app.availableInventory);
     }
 }
